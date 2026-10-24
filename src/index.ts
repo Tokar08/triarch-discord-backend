@@ -1,22 +1,16 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { env } from './config/env.js';
+import routes from './routes/index.js';
 
-dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.json({
-        message: 'Triarch Discord Backend is running! 🚀',
-        timestamp: new Date().toISOString()
-    });
-});
+app.use('/', routes);
 
-app.listen(PORT, () => {
-    console.log(`🚀 Triarch Backend listening on http://localhost:${PORT}`);
+app.listen(env.PORT, () => {
+    console.log(` Triarch Backend listening on http://localhost:${env.PORT}`);
 });
