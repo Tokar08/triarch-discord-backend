@@ -1,11 +1,9 @@
 import { Router, Request, Response } from 'express';
-import crypto from 'node:crypto';
 import { env } from '../config/env.js';
 import { generateAuthUrl, exchangeCodeForToken, fetchDiscordUser, fetchGuildMember } from '../services/discord.service.js';
+import { createSession } from '../services/session.service.js';
 
 const router = Router();
-
-const sessions = new Map<string, { discordId: string; username: string; avatar: string | null; nick: string | null }>();
 
 router.get('/login', (req: Request, res: Response) => {
     const { url, state } = generateAuthUrl();
@@ -38,9 +36,7 @@ router.get('/callback', async (req: Request, res: Response) => {
         const user = await fetchDiscordUser(accessToken);
         const member = await fetchGuildMember(accessToken);
 
-        const sessionToken = crypto.randomBytes(32).toString('hex');
-
-        sessions.set(sessionToken, {
+        const sessionToken = createSession({
             discordId: user.id,
             username: user.global_name || user.username,
             avatar: user.avatar,
@@ -59,6 +55,18 @@ router.get('/callback', async (req: Request, res: Response) => {
         console.error('OAuth callback error:', error);
         res.status(500).send('Authentication failed');
     }
+});
+
+router.get('/logout', (req: Request, res: Response) => {
+    const sessionToken = req.cookies?.session;
+
+    if (sessionToken) {
+        const { deleteSession } = require('../services/session.service.js');
+        deleteSession(sessionToken);
+    }
+
+    res.clearCookie('session');
+    res.redirect(`${env.FRONTEND_URL}/`);
 });
 
 export default router;
