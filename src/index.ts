@@ -5,8 +5,11 @@ import { env } from './config/env.js';
 import routes from './routes/index.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { logger } from './utils/logger.js';
+import helmet from "helmet";
 
 const app = express();
+
+app.use(helmet());
 
 app.use(cors({
     origin: env.FRONTEND_URL,
