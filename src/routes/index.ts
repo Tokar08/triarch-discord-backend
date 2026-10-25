@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import authRoutes from './auth.routes.js';
 import profileRoutes from './profile.routes.js';
+import {apiLimiter} from "../middleware/rateLimiter.js";
 
 const router = Router();
 
@@ -12,6 +13,6 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 router.use('/api/auth', authRoutes);
-router.use('/api/profile', profileRoutes);
+router.use('/api/profile', apiLimiter, profileRoutes);
 
 export default router;
