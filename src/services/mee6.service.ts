@@ -1,7 +1,8 @@
 import { env } from '../config/env.js';
 import type { Mee6Player, Mee6Level } from '../types/mee6.types.js';
+import { logger } from '../utils/logger.js';
 
-const MEE6_CACHE_TTL = 5 * 60 * 1000;
+const MEE6_CACHE_TTL = 1 * 60 * 1000;
 
 interface CacheEntry {
     data: Mee6Player[];
@@ -12,11 +13,11 @@ let leaderboardCache: CacheEntry | null = null;
 
 async function fetchLeaderboard(): Promise<Mee6Player[]> {
     if (leaderboardCache && leaderboardCache.expiresAt > Date.now()) {
-        console.log('[MEE6] Cache hit');
+        logger.debug('[MEE6] Cache hit');
         return leaderboardCache.data;
     }
 
-    console.log('[MEE6] Cache miss, fetching from API');
+    logger.info('[MEE6] Cache miss, fetching from API');
 
     const url = `https://mee6.xyz/api/plugins/levels/leaderboard/${env.GUILD_ID}?limit=1000&page=0`;
 
@@ -55,7 +56,7 @@ export async function getMee6Level(discordId: string): Promise<Mee6Level | null>
             rank: players.indexOf(player) + 1,
         };
     } catch (error) {
-        console.error('[MEE6] Error fetching level:', error);
+        logger.error({ err: error, discordId }, 'Error fetching MEE6 level');
         return null;
     }
 }

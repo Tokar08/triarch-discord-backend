@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
 import routes from './routes/index.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { logger } from './utils/logger.js';
 
 const app = express();
 
@@ -14,7 +16,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/', routes);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 app.listen(env.PORT, () => {
-    console.log(`Triarch Backend listening on http://localhost:${env.PORT}`);
+    logger.info(`Triarch Backend listening on http://localhost:${env.PORT}`);
 });

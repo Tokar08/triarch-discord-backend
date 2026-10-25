@@ -1,7 +1,8 @@
-import { Router, Request, Response } from 'express';
+import {Router, Request, Response, NextFunction} from 'express';
 import { env } from '../config/env.js';
 import { generateAuthUrl, exchangeCodeForToken, fetchDiscordUser, fetchGuildMember } from '../services/discord.service.js';
 import { createSession } from '../services/session.service.js';
+import {logger} from "../utils/logger.js";
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.get('/login', (req: Request, res: Response) => {
     res.redirect(url);
 });
 
-router.get('/callback', async (req: Request, res: Response) => {
+router.get('/callback', async (req: Request, res: Response, next : NextFunction) => {
     const { code, state } = req.query;
 
     if (!state || state !== req.cookies?.oauth_state) {
@@ -52,9 +53,10 @@ router.get('/callback', async (req: Request, res: Response) => {
 
         res.redirect(`${env.FRONTEND_URL}/profile`);
     } catch (error) {
-        console.error('OAuth callback error:', error);
-        res.status(500).send('Authentication failed');
+        logger.error({ err: error, code }, 'OAuth callback failed');
+        next(error);
     }
+
 });
 
 router.get('/logout', (req: Request, res: Response) => {
