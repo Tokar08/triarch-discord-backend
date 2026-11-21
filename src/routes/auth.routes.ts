@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { z as zod } from 'zod';
 import { env } from '../config/env.js';
 import { generateAuthUrl, exchangeCodeForToken, fetchDiscordUser, fetchGuildMember } from '../services/discord.service.js';
-import { createSession } from '../services/session.service.js';
+import { createSession, deleteSession, SESSION_TTL } from '../services/session.service.js';
 import { logger } from '../utils/logger.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 
@@ -48,7 +48,7 @@ router.get('/callback', authLimiter, async (req: Request, res: Response, next: N
         const user = await fetchDiscordUser(accessToken);
         const member = await fetchGuildMember(accessToken);
 
-        const sessionToken = createSession({
+        const sessionToken = await createSession({
             discordId: user.id,
             username: user.global_name || user.username,
             avatar: user.avatar,
@@ -57,7 +57,7 @@ router.get('/callback', authLimiter, async (req: Request, res: Response, next: N
 
         res.cookie('session', sessionToken, {
             httpOnly: true,
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            maxAge: SESSION_TTL * 1000,
             sameSite: 'lax',
             path: '/',
         });
@@ -70,12 +70,11 @@ router.get('/callback', authLimiter, async (req: Request, res: Response, next: N
     }
 });
 
-router.get('/logout', (req: Request, res: Response) => {
+router.get('/logout', async (req: Request, res: Response) => {
     const sessionToken = req.cookies?.session;
 
     if (sessionToken) {
-        const { deleteSession } = require('../services/session.service.js');
-        deleteSession(sessionToken);
+        await deleteSession(sessionToken);
     }
 
     res.clearCookie('session');
