@@ -12,6 +12,7 @@ const envSchema = zod.object({
     DISCORD_SCOPES: zod.string().min(1, 'DISCORD_SCOPES is required'),
     FRONTEND_URL: zod.string().url('FRONTEND_URL must be a valid URL').default('http://localhost:3000'),
     REDIS_URL: zod.string().url('REDIS_URL must be a valid URL'),
+    DATABASE_URL: zod.string().url('DATABASE_URL must be a valid URL'),
 });
 
 export const env = envSchema.parse(process.env);

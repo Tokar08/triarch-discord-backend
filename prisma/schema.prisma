@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  discordId    String          @unique
+  username     String
+  avatar       String?
+  nick         String?
+  roles        String[]        @default([])
+  joinedAt     DateTime?
+  lastLoginAt  DateTime?
+  lastActiveAt DateTime?
+  lastSyncAt   DateTime?
+  level        Int             @default(0)
+  xp           Int             @default(0)
+  messages     Int             @default(0)
+  rank         Int?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  snapshots    LevelSnapshot[]
+}
+
+model LevelSnapshot {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level      Int
+  xp         Int
+  messages   Int
+  rank       Int?
+  recordedAt DateTime @default(now())
+
+  @@index([userId, recordedAt])
+}
